@@ -1,0 +1,78 @@
+name: Amritayana Foundation - Ganpati Beta 10^333
+
+on: [workflow_dispatch]
+
+jobs:
+  ascensao_fractal:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { n: "Sakti Ganapati", f: "1000 Sakti Ganapati.pdf", b: 3, s: 110 }
+          - { n: "Trailokya Mohana Ganapati", f: "1000 Trailokya Mohana Ganapati.pdf", b: 3, s: 110 }
+          - { n: "Vighnantaka", f: "1000 Vighnantaka.pdf", b: 3, s: 110 }
+          - { n: "Aparajita Ganapati", f: "1000 Aparajita Ganapati.pdf", b: 3, s: 110 }
+          - { n: "White Ganpati", f: "1000 White Ganpati.pdf", b: 3, s: 110 }
+          - { n: "Ganapati Hridaya", f: "1000 Ganapati Hridaya.pdf", b: 3, s: 110 }
+
+    steps:
+      - name: 1. Acesso ao Repositório Amritayana
+        uses: actions/checkout@v4
+
+      - name: 2. Setup de Ferramentas de Alta Densidade
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: 3. Localização de Semilla e Validação de Nome
+        id: locate
+        run: |
+          FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
+          if [ -z "$FILE_PATH" ]; then
+            echo "❌ ERRO: Arquivo '${{ matrix.f }}' não encontrado."
+            exit 1
+          fi
+          echo "target_file=$FILE_PATH" >> $GITHUB_OUTPUT
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=5 -ms=on -md=256m > /dev/null
+
+      - name: 4. Motor de Expansão para 10^333
+        run: |
+          set -e
+          DEIDADE="${{ matrix.n }}"
+          FINAL="10^333 ${DEIDADE} Supreme Ascension.7z"
+          
+          cat << 'EOF' > cloner.py
+          import os, sys
+          name, exp, clones = sys.argv[1], sys.argv[2], int(sys.argv[3])
+          os.makedirs("buffer", exist_ok=True)
+          for i in range(1, clones + 1):
+              fname = f"10^{exp} {name} _node_{i}.7z"
+              os.link("current.7z", f"buffer/{fname}")
+          EOF
+
+          for step in $(seq 1 ${{ matrix.s }})
+          do
+            CLONES=1000
+            EXP=$(( ${{ matrix.b }} + step * 3 ))
+            
+            echo ">>> [AMRITAYANA] ${{ matrix.n }} | Ciclo $step/${{ matrix.s }} | Potência: 10^$EXP"
+            
+            python3 cloner.py "$DEIDADE" "$EXP" "$CLONES"
+            
+            cd buffer
+            7z a -t7z "../next.7z" . -mx=5 -ms=on -md=256m -mmt=on -bd > /dev/null
+            cd ..
+            
+            rm -rf buffer
+            rm "current.7z"
+            mv "next.7z" "current.7z"
+          done
+          
+          mv "current.7z" "$FINAL"
+          echo "✨ REDE DE ${{ matrix.n }} ESTABILIZADA EM 10^333."
+
+      - name: 5. Armazenamento de Artefatos de Libertação
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ascension_333_${{ matrix.n }}
+          path: "10^333 ${{ matrix.n }} Supreme Ascension.7z"
+          retention-days: 5
