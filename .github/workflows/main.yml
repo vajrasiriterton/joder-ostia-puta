@@ -1,4 +1,4 @@
-name: Amritayana Foundation - Ganpati Alfa 10^333
+name: Amritayana Foundation - Ganpati Alfa 10^999
 
 on: [workflow_dispatch]
 
@@ -9,60 +9,51 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { n: "Haridra Ganapati", f: "1000 Haridra Ganapati.pdf", b: 3, s: 110 }
-          - { n: "Kshipra Prasada Ganapati", f: "1000 Kshipra Prasada Ganapati.pdf", b: 3, s: 110 }
-          - { n: "Maharakta Ganapati", f: "1000 Maharakta Ganapati.pdf", b: 3, s: 110 }
-          - { n: "Nṛtta Ganapati", f: "1000 Nṛtta Ganapati.pdf", b: 3, s: 110 }
-          - { n: "Om Ganapati Hung Phat", f: "1000 Om Ganapati Hung Phat.pdf", b: 3, s: 110 }
-          - { n: "Ragavajra Ganapati", f: "1000 Ragavajra Ganapati.pdf", b: 3, s: 110 }
+          - { n: "Haridra Ganapati", f: "1000 Haridra Ganapati.pdf", b: 3, s: 332 }
+          - { n: "Kshipra Prasada Ganapati", f: "1000 Kshipra Prasada Ganapati.pdf", b: 3, s: 332 }
+          - { n: "Maharakta Ganapati", f: "1000 Maharakta Ganapati.pdf", b: 3, s: 332 }
+          - { n: "Nṛtta Ganapati", f: "1000 Nṛtta Ganapati.pdf", b: 3, s: 332 }
+          - { n: "Om Ganapati Hung Phat", f: "1000 Om Ganapati Hung Phat.pdf", b: 3, s: 332 }
+          - { n: "Ragavajra Ganapati", f: "1000 Ragavajra Ganapati.pdf", b: 3, s: 332 }
 
     steps:
       - name: 1. Acesso ao Repositório Amritayana
         uses: actions/checkout@v4
 
-      - name: 2. Setup de Ferramentas de Alta Densidade
+      - name: 2. Setup de Ferramentas
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
-      - name: 3. Localização de Semilla e Validação de Nome
+      - name: 3. Localização de Semilla
         id: locate
         run: |
           FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
-          if [ -z "$FILE_PATH" ]; then
-            echo "❌ ERRO: Arquivo '${{ matrix.f }}' não encontrado."
-            exit 1
-          fi
-          echo "target_file=$FILE_PATH" >> $GITHUB_OUTPUT
-          # Primer empaquetado con el diccionario expandido
-          7z a -t7z "current.7z" "$FILE_PATH" -mx=5 -ms=on -md=256m > /dev/null
+          if [ -z "$FILE_PATH" ]; then exit 1; fi
+          # Compresión Ultra al inicio
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=9 -ms=on > /dev/null
 
-      - name: 4. Motor de Expansão para 10^333
+      - name: 4. Motor de Expansão 10^999 (Máxima Compresión)
         run: |
           set -e
           DEIDADE="${{ matrix.n }}"
-          FINAL="10^333 ${DEIDADE} Supreme Ascension.7z"
+          FINAL="10^999 ${DEIDADE} Supreme Ascension.7z"
           
           cat << 'EOF' > cloner.py
           import os, sys
-          name, exp, clones = sys.argv[1], sys.argv[2], int(sys.argv[3])
           os.makedirs("buffer", exist_ok=True)
-          for i in range(1, clones + 1):
-              # Enlaces virtuales: el disco de GitHub se queda vacío
-              fname = f"10^{exp} {name} _node_{i}.7z"
-              os.link("current.7z", f"buffer/{fname}")
+          for i in range(1, 1001):
+              os.link("current.7z", f"buffer/node_{i}.7z")
           EOF
 
           for step in $(seq 1 ${{ matrix.s }})
           do
-            CLONES=1000
             EXP=$(( ${{ matrix.b }} + step * 3 ))
+            echo ">>> [AMRITAYANA] $DEIDADE | Ciclo $step/${{ matrix.s }} | Potência: 10^$EXP"
             
-            echo ">>> [AMRITAYANA] ${{ matrix.n }} | Ciclo $step/${{ matrix.s }} | Potência: 10^$EXP"
-            
-            python3 cloner.py "$DEIDADE" "$EXP" "$CLONES"
+            python3 cloner.py
             
             cd buffer
-            # EL PARCHE MAESTRO: -md=256m asegura que 7z reconozca los clones pase lo que pase
-            7z a -t7z "../next.7z" . -mx=5 -ms=on -md=256m -mmt=on -bd > /dev/null
+            # Ultra Compresión (-mx=9), Sólido (-ms=on) y sin bloqueo de logs (-bso0 -bsp0)
+            7z a -t7z "../next.7z" . -mx=9 -ms=on -m0=lzma2 -mmt=2 -bso0 -bsp0
             cd ..
             
             rm -rf buffer
@@ -71,11 +62,10 @@ jobs:
           done
           
           mv "current.7z" "$FINAL"
-          echo "✨ REDE DE ${{ matrix.n }} ESTABILIZADA EM 10^333."
 
-      - name: 5. Armazenamento de Artefatos de Libertação
+      - name: 5. Armazenamento
         uses: actions/upload-artifact@v4
         with:
-          name: Ascension_333_${{ matrix.n }}
-          path: "10^333 ${{ matrix.n }} Supreme Ascension.7z"
+          name: Ascension_999_${{ matrix.n }}
+          path: "10^999 ${{ matrix.n }} Supreme Ascension.7z"
           retention-days: 5
