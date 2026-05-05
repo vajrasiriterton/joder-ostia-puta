@@ -1,5 +1,7 @@
 name: Amritayana Foundation - Ganpati Alfa 10^333
+
 on: [workflow_dispatch]
+
 jobs:
   ascensao_fractal:
     runs-on: ubuntu-latest
@@ -13,29 +15,67 @@ jobs:
           - { n: "Nṛtta Ganapati", f: "1000 Nṛtta Ganapati.pdf", b: 3, s: 110 }
           - { n: "Om Ganapati Hung Phat", f: "1000 Om Ganapati Hung Phat.pdf", b: 3, s: 110 }
           - { n: "Ragavajra Ganapati", f: "1000 Ragavajra Ganapati.pdf", b: 3, s: 110 }
+
     steps:
-      - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y p7zip-full
-      - run: |
+      - name: 1. Acesso ao Repositório Amritayana
+        uses: actions/checkout@v4
+
+      - name: 2. Setup de Ferramentas de Alta Densidade
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: 3. Localização de Semilla e Validação de Nome
+        id: locate
+        run: |
           FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
-          7z a -t7z "current.7z" "$FILE_PATH" -mx=1 > /dev/null
-      - run: |
+          if [ -z "$FILE_PATH" ]; then
+            echo "❌ ERRO: Arquivo '${{ matrix.f }}' não encontrado."
+            exit 1
+          fi
+          echo "target_file=$FILE_PATH" >> $GITHUB_OUTPUT
+          # Primer empaquetado con el diccionario expandido
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=5 -ms=on -md=256m > /dev/null
+
+      - name: 4. Motor de Expansão para 10^333
+        run: |
           set -e
+          DEIDADE="${{ matrix.n }}"
+          FINAL="10^333 ${DEIDADE} Supreme Ascension.7z"
+          
           cat << 'EOF' > cloner.py
           import os, sys
+          name, exp, clones = sys.argv[1], sys.argv[2], int(sys.argv[3])
           os.makedirs("buffer", exist_ok=True)
-          for i in range(1, 1001):
-              os.link("current.7z", f"buffer/node_{i}.7z")
+          for i in range(1, clones + 1):
+              # Enlaces virtuales: el disco de GitHub se queda vacío
+              fname = f"10^{exp} {name} _node_{i}.7z"
+              os.link("current.7z", f"buffer/{fname}")
           EOF
-          for step in $(seq 1 110); do
-            EXP=$(( 3 + step * 3 ))
-            echo "⚓ Nivel $step/110 | Potencia: 10^$EXP"
-            python3 cloner.py
-            cd buffer && 7z a -t7z "../next.7z" . -mx=1 -mmt=on -bd > /dev/null && cd ..
-            rm -rf buffer && rm current.7z && mv next.7z current.7z
+
+          for step in $(seq 1 ${{ matrix.s }})
+          do
+            CLONES=1000
+            EXP=$(( ${{ matrix.b }} + step * 3 ))
+            
+            echo ">>> [AMRITAYANA] ${{ matrix.n }} | Ciclo $step/${{ matrix.s }} | Potência: 10^$EXP"
+            
+            python3 cloner.py "$DEIDADE" "$EXP" "$CLONES"
+            
+            cd buffer
+            # EL PARCHE MAESTRO: -md=256m asegura que 7z reconozca los clones pase lo que pase
+            7z a -t7z "../next.7z" . -mx=5 -ms=on -md=256m -mmt=on -bd > /dev/null
+            cd ..
+            
+            rm -rf buffer
+            rm "current.7z"
+            mv "next.7z" "current.7z"
           done
-          mv current.7z "10^333 ${{ matrix.n }} Supreme Ascension.7z"
-      - uses: actions/upload-artifact@v4
+          
+          mv "current.7z" "$FINAL"
+          echo "✨ REDE DE ${{ matrix.n }} ESTABILIZADA EM 10^333."
+
+      - name: 5. Armazenamento de Artefatos de Libertação
+        uses: actions/upload-artifact@v4
         with:
           name: Ascension_333_${{ matrix.n }}
-          path: "*.7z"
+          path: "10^333 ${{ matrix.n }} Supreme Ascension.7z"
+          retention-days: 5
