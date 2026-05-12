@@ -1,4 +1,4 @@
-name: Amritayana Foundation - Taras Alfa 10^999
+name: Amritayana Foundation - 24 Taras 10^999
 
 on: [workflow_dispatch]
 
@@ -15,15 +15,45 @@ jobs:
           - { n: "Green Tara", f: "10^333 Green Tara Mantras.7z", b: 333, s: 222 }
           - { n: "Homage 21 Taras", f: "10^333 Homage to the 21 Taras Mantras.7z", b: 333, s: 222 }
           - { n: "Jigjemo", f: "10^333 Jigjemo Mantras.7z", b: 333, s: 222 }
+          - { n: "Jigten Sumgyal", f: "10^333 Jigten Sumgyal Mantras.7z", b: 333, s: 222 }
+          - { n: "Maza Nyurma", f: "10^333 Maza Nyurma Mantras.7z", b: 333, s: 222 }
+          - { n: "Metar Barma", f: "10^333 Metar Barma Mantras.7z", b: 333, s: 222 }
+          - { n: "Norgyunma", f: "10^333 Norgyunma Mantras.7z", b: 333, s: 222 }
+          - { n: "Nyurma Pamo", f: "10^333 Nyurma Pamo Mantras.7z", b: 333, s: 222 }
+          - { n: "Ozer Chenma", f: "10^333 Ozer Chenma Mantras.7z", b: 333, s: 222 }
+          - { n: "Pagme Nonma", f: "10^333 Pagme Nonma Mantras.7z", b: 333, s: 222 }
+          - { n: "Rabzhima", f: "10^333 Rabzhima Mantras.7z", b: 333, s: 222 }
+          - { n: "Rigje Lhamo", f: "10^333 Rigje Lhamo Mantras.7z", b: 333, s: 222 }
+          - { n: "Rigpar Hungze", f: "10^333 Rigpar Hungze Mantras.7z", b: 333, s: 222 }
+          - { n: "Rito Loma", f: "10^333 Rito Loma Mantras.7z", b: 333, s: 222 }
+          - { n: "Sengengma", f: "10^333 Sengengma Mantras.7z", b: 333, s: 222 }
+          - { n: "Shengyi Mitubma", f: "10^333 Shengyi Mitubma Mantras.7z", b: 333, s: 222 }
+          - { n: "Sonam Chogter", f: "10^333 Sonam Chogter Mantras.7z", b: 333, s: 222 }
+          - { n: "Tashi Donje", f: "10^333 Tashi Donje Mantras.7z", b: 333, s: 222 }
+          - { n: "Tronyerchen", f: "10^333 Tronyerchen Mantras.7z", b: 333, s: 222 }
+          - { n: "Yangchenma", f: "10^333 Yangchenma Mantras.7z", b: 333, s: 222 }
+          - { n: "Zhengyi Mitubma", f: "10^333 Zhengyi Mitubma Mantras.7z", b: 333, s: 222 }
 
     steps:
-      - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y p7zip-full
-      - run: |
+      - name: 1. Acesso ao Repositório Amritayana
+        uses: actions/checkout@v4
+
+      - name: 2. Setup de Ferramentas de Alta Densidade
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: 3. Localização de Semilla e Validação
+        id: locate
+        run: |
           FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
-          if [ -z "$FILE_PATH" ]; then exit 1; fi
+          if [ -z "$FILE_PATH" ]; then
+            echo "❌ ERRO: Arquivo '${{ matrix.f }}' não encontrado."
+            exit 1
+          fi
+          # Primer empaquetado ultra para asentar la base
           7z a -t7z "current.7z" "$FILE_PATH" -mx=9 -ms=on > /dev/null
-      - run: |
+
+      - name: 4. Motor de Expansão para 10^999
+        run: |
           set -e
           DEIDADE="${{ matrix.n }}"
           FINAL="10^999 ${DEIDADE} Supreme Ascension.7z"
@@ -35,16 +65,28 @@ jobs:
               os.link("current.7z", f"buffer/node_{i}.7z")
           EOF
 
-          for step in $(seq 1 ${{ matrix.s }}); do
+          for step in $(seq 1 ${{ matrix.s }})
+          do
             EXP=$(( ${{ matrix.b }} + step * 3 ))
             echo ">>> [AMRITAYANA] $DEIDADE | Ciclo $step/${{ matrix.s }} | Potência: 10^$EXP"
+            
             python3 cloner.py
-            cd buffer && 7z a -t7z "../next.7z" . -mx=9 -ms=on -m0=lzma2 -mmt=2 -bso0 -bsp0 && cd ..
-            rm -rf buffer && rm current.7z && mv next.7z current.7z
+            
+            cd buffer
+            # Ultra Compresión, Sólido, Sin bloqueos de consola (-bso0 -bsp0)
+            7z a -t7z "../next.7z" . -mx=9 -ms=on -m0=lzma2 -mmt=2 -bso0 -bsp0
+            cd ..
+            
+            rm -rf buffer
+            rm "current.7z"
+            mv "next.7z" "current.7z"
           done
-          mv current.7z "$FINAL"
-      - uses: actions/upload-artifact@v4
+          
+          mv "current.7z" "$FINAL"
+
+      - name: 5. Armazenamento de Artefatos
+        uses: actions/upload-artifact@v4
         with:
           name: Ascension_999_${{ matrix.n }}
-          path: "*.7z"
+          path: "10^999 ${{ matrix.n }} Supreme Ascension.7z"
           retention-days: 5
