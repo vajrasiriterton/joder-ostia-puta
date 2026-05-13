@@ -1,0 +1,88 @@
+name: Amritayana Foundation - Medicine Mandala Complete 10^999
+
+on: [workflow_dispatch]
+
+jobs:
+  ascensao_fractal:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { n: "12 Yakshas", f: "10^333 12 Yakshas Mantras.7z", b: 333, s: 222 }
+          - { n: "Abhayamraja", f: "10^333 Abhayamraja Mantras.7z", b: 333, s: 222 }
+          - { n: "Abhijñaraja", f: "10^333 Abhijñaraja Mantras.7z", b: 333, s: 222 }
+          - { n: "Ashokottamshri", f: "10^333 Ashokottamshri Mantras.7z", b: 333, s: 222 }
+          - { n: "Batshima", f: "10^333 Batshima Mantras.7z", b: 333, s: 222 }
+          - { n: "Candraprabha", f: "10^333 Candraprabha Mantras.7z", b: 333, s: 222 }
+          - { n: "Dharmakirtisagara", f: "10^333 Dharmakirtisagara Mantras.7z", b: 333, s: 222 }
+          - { n: "Medicine Buddha Base", f: "10^333 Medicine Buddha Mantras.7z", b: 333, s: 222 }
+          - { n: "Medicine Buddha C1", f: "10^333 Medicine Buddha Mantras - Copy.7z", b: 333, s: 222 }
+          - { n: "Medicine Buddha C2", f: "10^333 Medicine Buddha Mantras - Copy (2).7z", b: 333, s: 222 }
+          - { n: "Medicine Buddha C3", f: "10^333 Medicine Buddha Mantras - Copy (3).7z", b: 333, s: 222 }
+          - { n: "Medicine Buddha C4", f: "10^333 Medicine Buddha Mantras - Copy (4).7z", b: 333, s: 222 }
+          - { n: "Medicine Buddha C5", f: "10^333 Medicine Buddha Mantras - Copy (5).7z", b: 333, s: 222 }
+          - { n: "Medicine Buddha C6", f: "10^333 Medicine Buddha Mantras - Copy (6).7z", b: 333, s: 222 }
+          - { n: "Parnashavari", f: "10^333 Parnashavari Mantras.7z", b: 333, s: 222 }
+          - { n: "Prajñāpāramitā", f: "10^333 Prajñāpāramitā Mantras.7z", b: 333, s: 222 }
+          - { n: "Shakyarudra", f: "10^333 Shakyarudra Mantras.7z", b: 333, s: 222 }
+          - { n: "Suparikirtita Namashri", f: "10^333 Suparikirtita Namashri Mantras.7z", b: 333, s: 222 }
+          - { n: "Suryaprabha", f: "10^333 Suryaprabha Mantras.7z", b: 333, s: 222 }
+          - { n: "Suvarnabhadra Vimala", f: "10^333 Suvarnabhadra Vimala Mantras.7z", b: 333, s: 222 }
+
+    steps:
+      - name: 1. Acesso ao Repositório Amritayana
+        uses: actions/checkout@v4
+
+      - name: 2. Setup de Ferramentas de Alta Densidade
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: 3. Localização de Semilla e Validação
+        id: locate
+        run: |
+          FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
+          if [ -z "$FILE_PATH" ]; then
+            echo "❌ ERRO: Arquivo '${{ matrix.f }}' não encontrado."
+            exit 1
+          fi
+          # Primer empaquetado ultra para asentar la base
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=9 -ms=on > /dev/null
+
+      - name: 4. Motor de Expansão para 10^999
+        run: |
+          set -e
+          DEIDADE="${{ matrix.n }}"
+          FINAL="10^999 ${DEIDADE} Supreme Ascension.7z"
+          
+          cat << 'EOF' > cloner.py
+          import os
+          os.makedirs("buffer", exist_ok=True)
+          for i in range(1, 1001):
+              os.link("current.7z", f"buffer/node_{i}.7z")
+          EOF
+
+          for step in $(seq 1 ${{ matrix.s }})
+          do
+            EXP=$(( ${{ matrix.b }} + step * 3 ))
+            echo ">>> [AMRITAYANA] $DEIDADE | Ciclo $step/${{ matrix.s }} | Potência: 10^$EXP"
+            
+            python3 cloner.py
+            
+            cd buffer
+            # Ultra Compresión, Sólido, Sin bloqueos de consola (-bso0 -bsp0)
+            7z a -t7z "../next.7z" . -mx=9 -ms=on -m0=lzma2 -mmt=2 -bso0 -bsp0
+            cd ..
+            
+            rm -rf buffer
+            rm "current.7z"
+            mv "next.7z" "current.7z"
+          done
+          
+          mv "current.7z" "$FINAL"
+
+      - name: 5. Armazenamento de Artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ascension_999_${{ matrix.n }}
+          path: "10^999 ${{ matrix.n }} Supreme Ascension.7z"
+          retention-days: 5
