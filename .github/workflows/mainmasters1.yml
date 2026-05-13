@@ -1,0 +1,85 @@
+name: Amritayana 10^999 - 7Z Engine
+
+on: [workflow_dispatch]
+
+jobs:
+  fractal_7z:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { f: "1000 25 Disciples.pdf", n: "25 Disciples", e: "Nyingma" }
+          - { f: "1000 84 Siddhas.pdf", n: "84 Siddhas", e: "Especial" }
+          - { f: "1000 Atisha Dipamkara.pdf", n: "Atisha Dipamkara", e: "Especial" }
+          - { f: "1000 Dilgo Khyentse Rinpoche.pdf", n: "Dilgo Khyentse Rinpoche", e: "Especial" }
+          - { f: "1000 Dudjom Lingpa.pdf", n: "Dudjom Lingpa", e: "Nyingma" }
+          - { f: "1000 Gampopa.pdf", n: "Gampopa", e: "Kagyu" }
+          - { f: "1000 Garab Dorje.pdf", n: "Garab Dorje", e: "Nyingma" }
+          - { f: "1000 Jamgön Kongtrul Lodrö Thaye.pdf", n: "Jamgön Kongtrul Lodrö Thaye", e: "Especial" }
+          - { f: "1000 Jamyang Khyentse Wangpo.pdf", n: "Jamyang Khyentse Wangpo", e: "Especial" }
+          - { f: "1000 Je Tsongkhapa.pdf", n: "Je Tsongkhapa", e: "Gelug" }
+          - { f: "1000 Jigme Lingpapdf.pdf", n: "Jigme Lingpapdf", e: "Nyingma" }
+          - { f: "1000 Karmapa.pdf", n: "Karmapa", e: "Kagyu" }
+          - { f: "1000 Kunkyen Dolpopa.pdf", n: "Kunkyen Dolpopa", e: "Especial" }
+          - { f: "1000 Longchenpapdf.pdf", n: "Longchenpapdf", e: "Nyingma" }
+          - { f: "1000 Machig Labdrön.pdf", n: "Machig Labdrön", e: "Especial" }
+          - { f: "1000 Marpa.pdf", n: "Marpa", e: "Kagyu" }
+          - { f: "1000 Milarepa.pdf", n: "Milarepa", e: "Kagyu" }
+          - { f: "1000 Nagarjuna.pdf", n: "Nagarjuna", e: "Especial" }
+          - { f: "1000 Naropa.pdf", n: "Naropa", e: "Kagyu" }
+          - { f: "1000 Niguma.pdf", n: "Niguma", e: "Especial" }
+          - { f: "1000 Nyangral Nyima Özer & Guru Chöwang.pdf", n: "Nyangral Nyima Özer & Guru Chöwang", e: "Nyingma" }
+          - { f: "1000 Padampa Sangye.pdf", n: "Padampa Sangye", e: "Especial" }
+          - { f: "1000 Sachen Kunga Nyingpo.pdf", n: "Sachen Kunga Nyingpo", e: "Sakya" }
+          - { f: "1000 Sakya Pandita.pdf", n: "Sakya Pandita", e: "Sakya" }
+          - { f: "1000 Samaya Mantras.pdf", n: "Samaya Mantras", e: "Especial" }
+          - { f: "1000 Saraha.pdf", n: "Saraha", e: "Especial" }
+          - { f: "1000 Sukhasiddhi.pdf", n: "Sukhasiddhi", e: "Especial" }
+          - { f: "1000 Tilopa.pdf", n: "Tilopa", e: "Kagyu" }
+          - { f: "1000 Tonpa Shenrab.pdf", n: "Tonpa Shenrab", e: "Especial" }
+          - { f: "1000 Universal Guru Yoga.pdf", n: "Universal Guru Yoga", e: "Especial" }
+          - { f: "1000 Vimalamitra.pdf", n: "Vimalamitra", e: "Nyingma" }
+          - { f: "1000 Ye Dharma Hetu.pdf", n: "Ye Dharma Hetu", e: "Especial" }
+
+    steps:
+      - name: Checkout del Repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalación de Dependencias
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Localización de Semilla
+        run: |
+          FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
+          if [ -z "$FILE_PATH" ]; then
+            echo "Archivo semilla no encontrado."
+            exit 1
+          fi
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=9 -ms=on > /dev/null
+
+      - name: Motor de Expansión 10^999
+        run: |
+          set -e
+          cat << 'EOF' > cloner.py
+          import os
+          os.makedirs("buffer", exist_ok=True)
+          for i in range(1, 1001):
+              os.link("current.7z", f"buffer/node_{i}.7z")
+          EOF
+
+          for step in $(seq 1 332)
+          do
+            python3 cloner.py
+            cd buffer
+            7z a -t7z "../next.7z" . -mx=0 -ms=on -bso0 -bsp0
+            cd ..
+            rm -rf buffer && rm "current.7z" && mv "next.7z" "current.7z"
+          done
+          mv "current.7z" "10^999 ${{ matrix.n }}.7z"
+
+      - name: Guardar Artefacto Maestro
+        uses: actions/upload-artifact@v4
+        with:
+          name: 7Z_Master_${{ matrix.n }}
+          path: "*.7z"
