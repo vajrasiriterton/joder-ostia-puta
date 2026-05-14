@@ -1,0 +1,74 @@
+name: Amritayana - Firmware Modulos M17-M33 (10^333)
+
+on: [workflow_dispatch]
+
+jobs:
+  compilacion_firmware_avanzado:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { m: "M17", n: "DHARMAKAYA Stainless Pinnacle", f: "10.000 DHARMAKAYA Stainless Pinnacle.pdf" }
+          - { m: "M18", n: "DHARMAKAYA Essence of Enlightenment", f: "1000 DHARMAKAYA Essence of Enlightenment.pdf" }
+          - { m: "M19", n: "DHARMAKAYA Secret Kingdom", f: "1000 DHARMAKAYA Secret Kingdom.pdf" }
+          - { m: "M20", n: "Gyur-ngag", f: "1000 Gyur-ngag.pdf" }
+          - { m: "M21", n: "Ku-dung Core", f: "1000 Ku-dung Core.pdf" }
+          - { m: "M22", n: "Namkhé Dzö", f: "1000 Namkhé Dzö.pdf" }
+          - { m: "M23", n: "Phab-ta", f: "1000 Phab-ta.pdf" }
+          - { m: "M24", n: "Ruchira Mani", f: "1000 Ruchira Mani.pdf" }
+          - { m: "M25", n: "Sangwa Rigsel", f: "1000 Secret Relic Mantra (Sangwa Rigsel) - Copy (2).pdf" }
+          - { m: "M26", n: "Shitro", f: "1000 Shitro.pdf" }
+          - { m: "M27", n: "Supratiṣṭha", f: "1000 Supratiṣṭha.pdf" }
+          - { m: "M28", n: "Tsuktor Barwa", f: "1000 Tsuktor Barwa.pdf" }
+          - { m: "M29", n: "Vajra Āveśaya", f: "1000 Vajra Āveśaya.pdf" }
+          - { m: "M30", n: "Vajra Uṣṇīṣa Jvala", f: "1000 Vajra Uṣṇīṣa Jvala.pdf" }
+          - { m: "M31", n: "Yuthok", f: "1000 Yuthok.pdf" }
+          - { m: "M32", n: "Özer Drime", f: "1000 Zung of the Exalted Completely Pure Stainless Light - Copy (2).pdf" }
+          - { m: "M33", n: "DHARMAKAYA Hundred Thousand Garlands", f: "10000 DHARMAKAYA Hundred Thousand Garlands.pdf" }
+
+    steps:
+      - name: 1. Acceso al Repositorio Amritayana
+        uses: actions/checkout@v4
+
+      - name: 2. Setup de Herramientas de Compresión
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: 3. Localización y Verificación de la Semilla
+        id: locate
+        run: |
+          FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
+          if [ -z "$FILE_PATH" ]; then
+            echo "❌ ERROR: Archivo semilla '${{ matrix.f }}' no encontrado."
+            exit 1
+          fi
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=9 -ms=on > /dev/null
+
+      - name: 4. Motor de Expansión Fractal (110 Ciclos)
+        run: |
+          set -e
+          cat << 'EOF' > cloner.py
+          import os
+          os.makedirs("buffer", exist_ok=True)
+          for i in range(1, 1001):
+              os.link("current.7z", f"buffer/node_{i}.7z")
+          EOF
+
+          # 110 ciclos x 3 órdenes de magnitud = 330 (+ base)
+          for step in $(seq 1 110)
+          do
+            echo ">>> [FIRMWARE KERNEL] ${{ matrix.m }} - ${{ matrix.n }} | Ciclo $step/110"
+            python3 cloner.py
+            cd buffer
+            7z a -t7z "../next.7z" . -mx=9 -ms=on -m0=lzma2 -mmt=2 -bso0 -bsp0
+            cd ..
+            rm -rf buffer && rm "current.7z" && mv "next.7z" "current.7z"
+          done
+          # Renombrado final inmaculado
+          mv "current.7z" "${{ matrix.m }} 10^333 ${{ matrix.n }}.7z"
+
+      - name: 5. Sellado y Carga del Artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: Firmware_${{ matrix.m }}_${{ matrix.n }}
+          path: "${{ matrix.m }} 10^333 ${{ matrix.n }}.7z"
