@@ -1,0 +1,73 @@
+name: Amritayana - Firmware Modulos 10^333
+
+on: [workflow_dispatch]
+
+jobs:
+  compilacion_firmware:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { m: "M1", n: "Ati Myong-grol", f: "1000 Ati Myong-grol.pdf" }
+          - { m: "M2", n: "Ati Yoga", f: "1000 Ati Yoga.pdf" }
+          - { m: "M3", n: "Bardo Bhumi Reset", f: "1000 Bardo Bhumi Reset.pdf" }
+          - { m: "M4", n: "Chöying Rigpa", f: "1000 Chöying Rigpa.pdf" }
+          - { m: "M5", n: "Dorje Lú", f: "1000 Dorje Lú.pdf" }
+          - { m: "M6", n: "Düdtsi Nyingpo", f: "1000 Düdtsi Nyingpo.pdf" }
+          - { m: "M7", n: "Inconditional Silence", f: "1000 Inconditional Silence.pdf" }
+          - { m: "M8", n: "Kunje Gyalpo", f: "1000 Kunje Gyalpo.pdf" }
+          - { m: "M9", n: "Kun-zang Yab-Yum", f: "1000 Kun-zang Yab-Yum.pdf" }
+          - { m: "M10", n: "Maha Sukha Ho", f: "1000 Maha Sukha Ho.pdf" }
+          - { m: "M11", n: "Ösel Lhundrub", f: "1000 Ösel Lhundrub.pdf" }
+          - { m: "M12", n: "Phur-bu", f: "1000 Phur-bu.pdf" }
+          - { m: "M13", n: "Rigpa Rangjung", f: "1000 Rigpa Rangjung.pdf" }
+          - { m: "M14", n: "Sangye Menla Long Dharani", f: "1000 Sangye Menla Long Dharani.pdf" }
+          - { m: "M15", n: "Thigle Chu-chik", f: "1000 Thigle Chu-chik.pdf" }
+          - { m: "M16", n: "Tsugtor Drime", f: "1000 Tsugtor Drime.pdf" }
+
+    steps:
+      - name: 1. Acesso ao Repositório Amritayana
+        uses: actions/checkout@v4
+
+      - name: 2. Setup de Ferramentas
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: 3. Localização da Semente de Código
+        id: locate
+        run: |
+          FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
+          if [ -z "$FILE_PATH" ]; then
+            echo "❌ ERRO: Arquivo semente '${{ matrix.f }}' não encontrado."
+            exit 1
+          fi
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=9 -ms=on > /dev/null
+
+      - name: 4. Motor de Expansão (10^3 -> 10^333)
+        run: |
+          set -e
+          cat << 'EOF' > cloner.py
+          import os
+          os.makedirs("buffer", exist_ok=True)
+          for i in range(1, 1001):
+              os.link("current.7z", f"buffer/node_{i}.7z")
+          EOF
+
+          # 110 ciclos x 3 órdenes de magnitud = 330. Base inicial = 3. Total = 333.
+          for step in $(seq 1 110)
+          do
+            EXP=$(( 3 + step * 3 ))
+            echo ">>> [FIRMWARE] ${{ matrix.m }} - ${{ matrix.n }} | Ciclo $step/110 | Densidade: 10^$EXP"
+            python3 cloner.py
+            cd buffer
+            7z a -t7z "../next.7z" . -mx=9 -ms=on -m0=lzma2 -mmt=2 -bso0 -bsp0
+            cd ..
+            rm -rf buffer && rm "current.7z" && mv "next.7z" "current.7z"
+          done
+          mv "current.7z" "${{ matrix.m }} 10^333 ${{ matrix.n }}.7z"
+
+      - name: 5. Armazenamento do Módulo
+        uses: actions/upload-artifact@v4
+        with:
+          name: Firmware_${{ matrix.m }}_${{ matrix.n }}
+          path: "${{ matrix.m }} 10^333 ${{ matrix.n }}.7z"
