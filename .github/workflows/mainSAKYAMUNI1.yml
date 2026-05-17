@@ -1,0 +1,72 @@
+name: Firmware Modulos M01-M16 (10^999)
+
+on: [workflow_dispatch]
+
+jobs:
+  compilacion_firmware_avanzado:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { m: "M01", n: "Achala Chanda-Maharoshana", f: "1000 Achala Chanda-Maharoshana.pdf" }
+          - { m: "M02", n: "Amitayus-Shakyamuni", f: "1000 Amitayus-Shakyamuni.pdf" }
+          - { m: "M03", n: "Anusarini", f: "1000 Anusarini.pdf" }
+          - { m: "M04", n: "Buddha Lochana Shakyamuni", f: "1000 Buddha Lochana Shakyamuni.pdf" }
+          - { m: "M05", n: "Buddha Samantabhadra-Shakyamuni", f: "1000 Buddha Samantabhadra-Shakyamuni.pdf" }
+          - { m: "M06", n: "Great Dharani of Conclusion", f: "1000 Great Dharani of Conclusion.pdf" }
+          - { m: "M07", n: "Guhyasadhana Rakta Shakyamuni", f: "1000 Guhyasadhana Rakta Shakyamuni.pdf" }
+          - { m: "M08", n: "Guhyasamaja Akshobhya", f: "1000 Guhyasamaja Akshobhya.pdf" }
+          - { m: "M09", n: "Jina Shakyamuni Tungshag", f: "1000 Jina Shakyamuni Tungshag.pdf" }
+          - { m: "M10", n: "King of Dharma", f: "1000 King of Dharma.pdf" }
+          - { m: "M11", n: "Krodharaja Mahabala", f: "1000 Krodharaja Mahabala.pdf" }
+          - { m: "M12", n: "Mahamayuri Vidyarajni", f: "1000 Mahamayuri Vidyarajni.pdf" }
+          - { m: "M13", n: "Mahapratisara", f: "1000 Mahapratisara.pdf" }
+          - { m: "M14", n: "Manjuvajra Shakyamuni", f: "1000 Manjuvajra Shakyamuni.pdf" }
+          - { m: "M15", n: "Muni Akasha-Garbha", f: "1000 Muni Akasha-Garbha.pdf" }
+          - { m: "M16", n: "Muni Akshobhya-Raja", f: "1000 Muni Akshobhya-Raja.pdf" }
+
+    steps:
+      - name: 1. Acceso al Repositorio
+        uses: actions/checkout@v4
+
+      - name: 2. Setup de Herramientas de Compresión
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: 3. Localización y Verificación de la Semilla
+        id: locate
+        run: |
+          FILE_PATH=$(find . -maxdepth 1 -iname "${{ matrix.f }}" -print -quit)
+          if [ -z "$FILE_PATH" ]; then
+            echo "❌ ERROR: Archivo semilla '${{ matrix.f }}' no encontrado."
+            exit 1
+          fi
+          7z a -t7z "current.7z" "$FILE_PATH" -mx=9 -ms=on > /dev/null
+
+      - name: 4. Motor de Expansión Fractal (333 Ciclos)
+        run: |
+          set -e
+          cat << 'EOF' > cloner.py
+          import os
+          os.makedirs("buffer", exist_ok=True)
+          for i in range(1, 1001):
+              os.link("current.7z", f"buffer/node_{i}.7z")
+          EOF
+
+          for step in $(seq 1 333)
+          do
+            echo ">>> [FIRMWARE KERNEL] ${{ matrix.m }} - ${{ matrix.n }} | Ciclo $step/333"
+            python3 cloner.py
+            cd buffer
+            7z a -t7z "../next.7z" . -mx=9 -ms=on -m0=lzma2 -mmt=2 -bso0 -bsp0
+            cd ..
+            rm -rf buffer && rm "current.7z" && mv "next.7z" "current.7z"
+          done
+          
+          mv "current.7z" "${{ matrix.m }} 10^999 ${{ matrix.n }}.7z"
+
+      - name: 5. Sellado y Carga del Artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: Firmware_${{ matrix.m }}_${{ matrix.n }}
+          path: "${{ matrix.m }} 10^999 ${{ matrix.n }}.7z"
